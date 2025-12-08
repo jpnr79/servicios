@@ -104,7 +104,7 @@ function plugin_version_servicios() {
                 'oldname'        => 'servicio',
                 'author'  		=> '<a href="http://www.carm.es">CARM</a>',
                 'homepage'       =>'https://github.com/calidadcarm/servicios',
-                'minGlpiVersion' => '0.85');
+                'requirements'   => ['glpi' => ['min' => '11.0', 'max' => '12.0']]);
 }
 
 
