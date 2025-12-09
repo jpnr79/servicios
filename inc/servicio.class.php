@@ -462,362 +462,239 @@ $tab[] = [
 
    $this->initForm($ID, $options);
       $this->showFormHeader($options);
+   echo "<tr class='tab_bg_1'><td colspan='4'>";
 
-      echo "<tr class='tab_bg_1'>";
-      //name of servicios
-      echo "<td>".__('Name')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {
-      echo Html::input('name', ['value' => $this->fields['name']]);
-	  }  else   {
-		echo $this->fields['acronimosi'];
-	  }	  
-      echo "</td>";
-      //version of servicios
-      echo "<td>".__('Estado')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {	  
-         Dropdown::show('State', array('value'  => $this->fields["states_id"],
-                                          'entity' => $this->fields["entities_id"]));
+      echo "<div class='card'>";
+      echo "<div class='card-header'>".__('General')."</div>";
+      echo "<div class='card-body'>";
+
+      echo "<div class='row'>";
+
+      // Nombre y estado
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Name')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         echo Html::input('name', ['value' => $this->fields['name'], 'class' => 'form-control']);
       } else {
-         echo Dropdown::getDropdownName("glpi_states",$this->fields["states_id"]);
-      }											  
-      echo "</td>";
-      echo "</tr>";
-	  // [INICIO] Añadido CRI.2.0
-      echo "<tr class='tab_bg_1'>";
-      //estado
-      echo "<td>".__('Location')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {	 	  
-      Dropdown::show('Location', array('value'  => $this->fields["locations_id"],
-                                       'entity' => $this->fields["entities_id"]));
+         echo Html::clean($this->fields['acronimosi']);
+      }
+      echo "</div>";
+
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Estado')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('State', ['value'  => $this->fields['states_id'], 'entity' => $this->fields['entities_id']]);
       } else {
-         echo Dropdown::getDropdownName("glpi_locations",$this->fields["locations_id"]);
-      }										   
-      echo "</td>";
-      //orientado a
-      echo "<td>".__('Orientado a')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {	  	  
-         Dropdown::show('PluginServiciosOrientado',
-                     array('value' => $this->fields["plugin_servicios_orientados_id"]));
+         echo Dropdown::getDropdownName('glpi_states', $this->fields['states_id']);
+      }
+      echo "</div>";
+
+      // Location / orientado
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Location')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('Location', ['value'  => $this->fields['locations_id'], 'entity' => $this->fields['entities_id']]);
       } else {
-         echo Dropdown::getDropdownName("glpi_plugin_servicios_orientados",$this->fields["plugin_servicios_orientados_id"]);
-      }						 
-      echo "</td>";
-      echo "</tr>";	  
-	  // [FIN]  Añadido CRI.2.0
+         echo Dropdown::getDropdownName('glpi_locations', $this->fields['locations_id']);
+      }
+      echo "</div>";
 
-      echo "<tr class='tab_bg_1'>";
-      //location of servicios
-      echo "<td>".__('Technician in charge of the hardware')."</td><td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {	 	  
-      User::dropdown(array('name' => "users_id_tech",
-                           'value'  => $this->fields["users_id_tech"],
-                           'entity' => $this->fields["entities_id"],
-                           'right'  => 'interface'));
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Orientado a')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('PluginServiciosOrientado', ['value' => $this->fields['plugin_servicios_orientados_id']]);
       } else {
-         echo Dropdown::getDropdownName("glpi_users", $this->fields["users_id_tech"]);		 
-      }						   
-      echo "</td>";
-      //language of servicios
-      echo "<td>".__('Group in charge of the hardware')."</td><td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-      Dropdown::show('Group', array('name' => "groups_id_tech",
-                                    'value'  => $this->fields["groups_id_tech"],
-                                    'entity' => $this->fields["entities_id"],
-                                    'condition' => ['is_assign' => 1]));
+         echo Dropdown::getDropdownName('glpi_plugin_servicios_orientados', $this->fields['plugin_servicios_orientados_id']);
+      }
+      echo "</div>";
+
+      // Technician / group
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Technician in charge of the hardware')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         User::dropdown(['name' => 'users_id_tech', 'value' => $this->fields['users_id_tech'], 'entity' => $this->fields['entities_id'], 'right' => 'interface']);
       } else {
-         echo Dropdown::getDropdownName("glpi_groups", $this->fields["groups_id_tech"]);		 
-      }									
-      echo "</td>";
-      echo "</tr>";
+         echo Dropdown::getDropdownName('glpi_users', $this->fields['users_id_tech']);
+      }
+      echo "</div>";
 
-      echo "<tr class='tab_bg_1'>";
-      //users
-      echo "<td>".__('Responsable del servicio')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-		  User::dropdown(array('name'   => 'responsable_id',
-							   'value'  => $this->fields["responsable_id"],
-							   'right'  => 'all',
-							   'entity' => $this->fields["entities_id"]));	
-	  } else {
-         echo Dropdown::getDropdownName("glpi_users", $this->fields["responsable_id"]);		 
-      }	
-      echo "</td>";
-      //Grupo of servicios
-      echo "<td>".__('Grupo usuario')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-         Dropdown::show('Group', array('name'      => 'groups_id',
-                                       'value'     => $this->fields['groups_id'],
-                                       'entity'    => $this->fields['entities_id']));
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Group in charge of the hardware')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('Group', ['name' => 'groups_id_tech', 'value' => $this->fields['groups_id_tech'], 'entity' => $this->fields['entities_id'], 'condition' => ['is_assign' => 1]]);
       } else {
-         echo Dropdown::getDropdownName("glpi_groups", $this->fields["groups_id"]);		 
-      }										   
-      echo "</td>";
-      echo "</tr>";
+         echo Dropdown::getDropdownName('glpi_groups', $this->fields['groups_id_tech']);
+      }
+      echo "</div>";
 
-      echo "<tr class='tab_bg_1'>";
-      //groups
-      echo "<td>".__('Responsable del negocio')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-         User::dropdown(array('name'   => 'users_id',
-                              'value'  => $this->fields['users_id'],
-                              'right'  => 'all',
-                              'entity' => $this->fields['entities_id']));
-	  } else {
-         echo Dropdown::getDropdownName("glpi_users", $this->fields["users_id"]);		 
-      }	
-      echo "</td>";
+      // Responsables
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Responsable del servicio')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         User::dropdown(['name' => 'responsable_id', 'value' => $this->fields['responsable_id'], 'right' => 'all', 'entity' => $this->fields['entities_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_users', $this->fields['responsable_id']);
+      }
+      echo "</div>";
 
-      //is_helpdesk_visible
-      echo "<td>" . __('Associable to a ticket') . "</td><td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-		//Dropdown::showYesNo('is_helpdesk_visible', $this->fields['is_helpdesk_visible']);
-		
-				$rand = mt_rand();
-				       
-         echo "<span class='switch pager_controls'>
-            <label for='is_helpdesk_visiblewitch$rand' title='".__('Mostrar avisos p&uacute;blicos')."'>
-               <input type='hidden' name='is_helpdesk_visible' value='0'>
-                              <input type='checkbox' id='is_helpdesk_visiblewitch$rand' name='is_helpdesk_visible' value='1'".
-                     ($this->fields['is_helpdesk_visible']
-                        ? "checked='checked'"
-                        : "")."
-               >
-               <span class='lever'></span>
-            </label>
-         </span>";			
-		
-	  } else {
-          echo Dropdown::getYesNo($this->fields['is_helpdesk_visible']);			 
-      }			
-      echo "</td>";
-      echo "</tr>";
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Grupo usuario')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('Group', ['name' => 'groups_id', 'value' => $this->fields['groups_id'], 'entity' => $this->fields['entities_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_groups', $this->fields['groups_id']);
+      }
+      echo "</div>";
 
-      echo "<tr class='tab_bg_1'><th style='height:15px; border-top: 12px solid white; border-bottom: 10px solid white;' colspan = '4'></th></tr>";
-	  
-      //backoffice of servicios
-      /*echo "<td></td>";
-      echo "<td></td>";*/
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Responsable del negocio')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         User::dropdown(['name' => 'users_id', 'value' => $this->fields['users_id'], 'right' => 'all', 'entity' => $this->fields['entities_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_users', $this->fields['users_id']);
+      }
+      echo "</div>";
 
-     /* echo "<td class='center' colspan = '4'>";
-      printf(__('Last update on %s'), Html::convDateTime($this->fields["date_mod"]));
-      echo "</td>";
-      echo "</tr>";*/
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Associable to a ticket')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::showYesNo('is_helpdesk_visible', $this->fields['is_helpdesk_visible']);
+      } else {
+         echo Dropdown::getYesNo($this->fields['is_helpdesk_visible']);
+      }
+      echo "</div>";
 
-	  //[INICIO] CRI 2.0 
-	  // titulo
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Titulo')."</td>";
-      echo "<td colspan='3'>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  		
-	   //Html::autocompletionTextField($this, 'titulo', array('value' => $this->fields['titulo'], 'option' => 'style="height:25px; width:99%"'));
-      echo Html::input('titulo', ['value' => $this->fields['titulo'], 'size' => '124']);
-	  } else  {
-		echo $this->fields['titulo'];
-	  }		
-      echo "</tr>";
-	  // descripcion
-     echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Descripcion')."</td>";
-      echo "<td class='top center' colspan='3'>";
-	  
-	  if (isset($rand_text))
-	  {
-	  echo "<div id='descripcion$rand_text'>";
-	  }
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {	
-	  
-      Html::textarea(['name'              => 'descripcion',
-                      'value'             => $this->fields["descripcion"],
-                      'enable_fileupload' => false,
-                      'enable_richtext'   => true,                      
-                      'cols'              => 90,
-                      'rows'              => 20]);	
+      // Calendario y criticidad
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Calendario disponibilidad')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('Calendar', ['value' => $this->fields['cal_id'], 'name' => 'cal_id']);
+      } else {
+         echo Dropdown::getDropdownName('glpi_calendars', $this->fields['cal_id']);
+      }
+      echo "</div>";
 
-	  } else  {		 		 
-		echo $this->fields['descripcion'];
-	  }			
-      echo "</tr>";
-	  // garantia
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Garantia')."</td>";
-      echo "<td class='top center' colspan='3'>";
-	  $rand = mt_rand();
-      
-	  if (isset($rand_text))
-	  {
-	  echo "<div id='garantia$rand_text'>";
-	  }
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-		
-      Html::textarea(['name'              => 'garantia',
-                      'value'             => $this->fields["garantia"],
-                      'enable_fileupload' => false,
-                      'enable_richtext'   => true,
-                      'cols'              => 90,
-                      'rows'              => 20]);			
-	  } else  {
-		echo $this->fields['garantia'];
-	  }			
-	  echo "</div>";	  
-      echo "</tr>";	  
-	  //[FINAL] CRI 2.0 
-	  
-      echo "<tr class='tab_bg_1'><th style='height:15px; border-top: 10px solid white; border-bottom: 12px solid white;' colspan = '4'></th></tr>";	  
-	  
-	  // [INICIO] Añadido CRI.2.0
-      echo "<tr class='tab_bg_1'>";
-      //Calendario disponibilidad
-      echo "<td>".__('Calendario disponibilidad')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-			Dropdown::show('Calendar', array('value'  => $this->fields["cal_id"], 'name'   => 'cal_id'));
-	  } else {
-         echo Dropdown::getDropdownName("glpi_calendars", $this->fields["cal_id"]);		 
-      }				
-      echo "</td>";
-      //criticidad a
-      echo "<td>".__('Criticidad')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_general_fields", "1")) {		  
-         Dropdown::show('PluginServiciosCriticidad',
-                     array('value' => $this->fields["plugin_servicios_criticidads_id"]));
-	  } else {
-         echo Dropdown::getDropdownName("glpi_plugin_servicios_criticidads", $this->fields["plugin_servicios_criticidads_id"]);		 
-      }						 
-      echo "</td>";
-      echo "</tr>";	  
-	  // [FIN]  Añadido CRI.2.0	 
-	  
-	  /*-------------
-	  CRI 2.0 Nuevos cambios 
-	  ------------------ */
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Acronimo SI')."</td><td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) {
-		echo "<input type='text' maxlength='10' size='10' name='acronimosi' value= '".$this->fields['acronimosi']."'>";
-	  } 
-	  else
-	  {
-		echo $this->fields['acronimosi'];
-	  }
-      echo "</td>";
-      echo "<td>".__('Responsable de Seguridad')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) { 
-		  User::dropdown(array('name'   => 'responsableseguridad_id',
-							   'value'  => $this->fields["responsableseguridad_id"],
-							   'right'  => 'all',
-							   'entity' => $this->fields["entities_id"]));	
-	  }
-	  else
-	  {
-		 echo Dropdown::getDropdownName("glpi_users",$this->fields["responsableseguridad_id"]);
-	  }
-      echo "</td>";
-      echo "</tr>";	  
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Num. de usuarios')."</td><td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) { 
-		echo "<input type='text' maxlength='10' size='10' name='nusuarios' value= '".$this->fields['nusuarios']."'>";
-	  }
-	  else
-	  {
-		echo $this->fields['nusuarios'];
-	  }	  
-      echo "</td>";
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Criticidad')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Dropdown::show('PluginServiciosCriticidad', ['value' => $this->fields['plugin_servicios_criticidads_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_plugin_servicios_criticidads', $this->fields['plugin_servicios_criticidads_id']);
+      }
+      echo "</div>";
 
-      echo "<td>".__('Afectado por ENS')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) { 	  
-		//	Dropdown::showYesNo('is_afectadoens', $this->fields['is_afectadoens']); 
-			
-				$rand = mt_rand();
-				       
-         echo "<span class='switch pager_controls'>
-            <label for='is_afectadoenswitch$rand' title='".__('Mostrar avisos p&uacute;blicos')."'>
-               <input type='hidden' name='is_afectadoens' value='0'>
-                              <input type='checkbox' id='is_afectadoenswitch$rand' name='is_afectadoens' value='1'".
-                     ($this->fields['is_afectadoens']
-                        ? "checked='checked'"
-                        : "")."
-               >
-               <span class='lever'></span>
-            </label>
-         </span>";				
-			
-	  }
-	  else
-	  {
-		  echo Dropdown::getYesNo($this->fields['is_afectadoens']);
-	  }			
-      echo "</td>";
-      echo "</tr>";	 	  
+      // Seguridad
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Acronimo SI')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         echo Html::input('acronimosi', ['value' => $this->fields['acronimosi'], 'maxlength' => 10, 'class' => 'form-control']);
+      } else {
+         echo Html::clean($this->fields['acronimosi']);
+      }
+      echo "</div>";
 
-      echo "</tr>";	  
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Nivel ENS')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) { 	  
-	           Dropdown::show('PluginServiciosEnsnivel',
-                     array('name'   => 'plugin_servicios_ensnivels_id',
-						 'value' => $this->fields["plugin_servicios_ensnivels_id"]));
-	  }
-	  else
-	  {
-		  echo Dropdown::getDropdownName("glpi_plugin_servicios_ensnivels",$this->fields["plugin_servicios_ensnivels_id"]);
-	  }						 
-      echo "</td>";
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Responsable de Seguridad')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         User::dropdown(['name' => 'responsableseguridad_id', 'value' => $this->fields['responsableseguridad_id'], 'right' => 'all', 'entity' => $this->fields['entities_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_users', $this->fields['responsableseguridad_id']);
+      }
+      echo "</div>";
 
-      echo "<td>".__('Estado de implantacion de ENS')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) {
-         Dropdown::showNumber('ens_estado_implantacion', array('value' => $this->fields['ens_estado_implantacion'],
-                                                     'min'   => 1,
-                                                     'max'   => 5));
-	  }
-	  else
-	  {
-		  echo $this->fields['ens_estado_implantacion'];
-	  }
-      echo "</td>";
-      echo "</tr>";	 
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Num. de usuarios')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         echo Html::input('nusuarios', ['value' => $this->fields['nusuarios'], 'maxlength' => 10, 'class' => 'form-control']);
+      } else {
+         echo Html::clean($this->fields['nusuarios']);
+      }
+      echo "</div>";
 
-      echo "</tr>";	  
-      echo "<tr class='tab_bg_1'>";
-      echo "<td>".__('Autenticacion de personal interno')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) {
-	           Dropdown::show('PluginServiciosAutentication',
-                     array('name'   => 'autenticationinterno_id',
-							'value' => $this->fields["autenticationinterno_id"]));
-	  }
-	  else
-	  {
-		  echo Dropdown::getDropdownName("glpi_plugin_servicios_autentications",$this->fields["autenticationinterno_id"]);
-	  }							
-      echo "</td>";
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Afectado por ENS')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         Dropdown::showYesNo('is_afectadoens', $this->fields['is_afectadoens']);
+      } else {
+         echo Dropdown::getYesNo($this->fields['is_afectadoens']);
+      }
+      echo "</div>";
 
-      echo "<td>".__('Autenticacion de personal externo')."</td>";
-      echo "<td>";
-	  if (Session::haveRight("plugin_servicios_security_fields", "1")) {
-	           Dropdown::show('PluginServiciosAutentication',
-                     array('name'   => 'autenticationexterno_id',
-							'value' => $this->fields["autenticationexterno_id"]));
-	  }
-	  else
-	  {
-		 echo Dropdown::getDropdownName("glpi_plugin_servicios_autentications",$this->fields["autenticationexterno_id"]);
-	  }								
-      echo "</td>";
-      echo "</tr>";		  
-	  
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Nivel ENS')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         Dropdown::show('PluginServiciosEnsnivel', ['name' => 'plugin_servicios_ensnivels_id', 'value' => $this->fields['plugin_servicios_ensnivels_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_plugin_servicios_ensnivels', $this->fields['plugin_servicios_ensnivels_id']);
+      }
+      echo "</div>";
+
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Estado de implantacion de ENS')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         Dropdown::showNumber('ens_estado_implantacion', ['value' => $this->fields['ens_estado_implantacion'], 'min' => 1, 'max' => 5]);
+      } else {
+         echo Html::clean($this->fields['ens_estado_implantacion']);
+      }
+      echo "</div>";
+
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Autenticacion de personal interno')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         Dropdown::show('PluginServiciosAutentication', ['name' => 'autenticationinterno_id', 'value' => $this->fields['autenticationinterno_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_plugin_servicios_autentications', $this->fields['autenticationinterno_id']);
+      }
+      echo "</div>";
+
+      echo "<div class='col-12 col-md-6 mb-3'>";
+      echo "<label class='form-label'>".__('Autenticacion de personal externo')."</label>";
+      if (Session::haveRight("plugin_servicios_security_fields", "1")) {
+         Dropdown::show('PluginServiciosAutentication', ['name' => 'autenticationexterno_id', 'value' => $this->fields['autenticationexterno_id']]);
+      } else {
+         echo Dropdown::getDropdownName('glpi_plugin_servicios_autentications', $this->fields['autenticationexterno_id']);
+      }
+      echo "</div>";
+
+      echo "</div>"; // row
+      echo "</div>"; // card-body
+      echo "</div>"; // card
+
+      echo "<div class='card mt-3'>";
+      echo "<div class='card-header'>".__('Details')."</div>";
+      echo "<div class='card-body'>";
+
+      echo "<div class='mb-3'>";
+      echo "<label class='form-label'>".__('Titulo')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         echo Html::input('titulo', ['value' => $this->fields['titulo'], 'class' => 'form-control']);
+      } else {
+         echo Html::clean($this->fields['titulo']);
+      }
+      echo "</div>";
+
+      echo "<div class='mb-3'>";
+      echo "<label class='form-label'>".__('Descripcion')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Html::textarea(['name' => 'descripcion', 'value' => $this->fields['descripcion'], 'enable_fileupload' => false, 'enable_richtext' => true, 'rows' => 12, 'class' => 'form-control richtext']);
+      } else {
+         echo Html::clean($this->fields['descripcion']);
+      }
+      echo "</div>";
+
+      echo "<div class='mb-3'>";
+      echo "<label class='form-label'>".__('Garantia')."</label>";
+      if (Session::haveRight("plugin_servicios_general_fields", "1")) {
+         Html::textarea(['name' => 'garantia', 'value' => $this->fields['garantia'], 'enable_fileupload' => false, 'enable_richtext' => true, 'rows' => 8, 'class' => 'form-control richtext']);
+      } else {
+         echo Html::clean($this->fields['garantia']);
+      }
+      echo "</div>";
+
+      echo "</div>"; // card-body
+      echo "</div>"; // card
+
+      echo "</td></tr>";
 
       $this->showFormButtons($options);
       
@@ -841,7 +718,6 @@ $tab[] = [
    public static function dropdown_servicio($options=array()) {
       global $DB, $CFG_GLPI;
 
-
       $p['name']    = 'plugin_servicios_servicios_id';
       $p['entity']  = '';
       $p['used']    = array();
@@ -853,26 +729,45 @@ $tab[] = [
          }
       }
 
-      $where = " WHERE `glpi_plugin_servicios_servicios`.`is_deleted` = '0' ".
-                       getEntitiesRestrictRequest("AND", "glpi_plugin_servicios_servicios", '', $p['entity'], true);
+      // Build criteria to get servicios
+      $criteria = [
+         'SELECT' => ['plugin_servicios_serviciotypes_id'],
+         'DISTINCT' => true,
+         'FROM' => 'glpi_plugin_servicios_servicios',
+         'WHERE' => [
+            'is_deleted' => 0
+         ]
+      ];
 
       if (count($p['used'])) {
-         $where .= " AND `id` NOT IN (0, ".implode(",",$p['used']).")";
+         $criteria['WHERE']['id'] = ['NOT IN', $p['used']];
       }
 
-      $query = "SELECT *
-                FROM `glpi_plugin_servicios_serviciotypes`
-                WHERE `id` IN (SELECT DISTINCT `plugin_servicios_serviciotypes_id`
-                               FROM `glpi_plugin_servicios_servicios`
-                             $where)
-                ORDER BY `name`";
-      $result = $DB->query($query);
+      // Get distinct servicio types
+      $servicios_result = $DB->request($criteria);
+      $servicios_ids = [];
+      foreach ($servicios_result as $row) {
+         $servicios_ids[] = $row['plugin_servicios_serviciotypes_id'];
+      }
 
       $values = array(0 => Dropdown::EMPTY_VALUE);
 
-      while ($data = $DB->fetchAssoc($result)) {
-         $values[$data['id']] = $data['name'];
+      if (count($servicios_ids) > 0) {
+         $type_criteria = [
+            'SELECT' => ['id', 'name'],
+            'FROM' => 'glpi_plugin_servicios_serviciotypes',
+            'WHERE' => [
+               'id' => $servicios_ids
+            ],
+            'ORDER' => 'name'
+         ];
+         $result = $DB->request($type_criteria);
+
+         foreach ($result as $data) {
+            $values[$data['id']] = $data['name'];
+         }
       }
+
       $rand = mt_rand();
       $out  = Dropdown::showFromArray('_serviciotype', $values, array('width'   => '30%',
                                                                 'rand'    => $rand,

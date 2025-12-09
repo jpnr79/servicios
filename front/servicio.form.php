@@ -100,12 +100,6 @@ if (isset($_POST["add"])) {
    } else {
 	 // Html::header(PluginServiciosServicio::getTypeName(2), $_SERVER['PHP_SELF'], "tools", "knowbaseitem"); 
       Html::header(PluginServiciosServicio::getTypeName(2), '', "assets","pluginserviciosmenu");
-      if (!isset($_SESSION['glpi_js_toload']['tinymce'])) {
-		Html::requireJs('tinymce');
-      }	
-
-	
-	  
    }
    //load servicios form
    $web->display($_GET);

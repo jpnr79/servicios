@@ -73,18 +73,6 @@ function plugin_servicios_install() {
    PluginServiciosProfile::initProfile();
    PluginServiciosProfile::createFirstAccess($_SESSION['glpiactiveprofile']['id']);
    
-	// [INICIO] [CRI] JMZ18G MIGRACIÓN GLPI 9.5.7 - 1 columnas utilizan el tipo de campo de fecha y hora en desuso.
-	if ($DB->TableExists(getTableForItemType('PluginServiciosServicio'))){
-		
-		if ($DB->areTimezonesAvailable()) {
-			
-			servicios_notMigratedDatetime();
-
-	 	}
-
-	}
-	// [FINAL] [CRI] JMZ18G MIGRACIÓN GLPI 9.5.7 - 1 columnas utilizan el tipo de campo de fecha y hora en desuso.
-		
 
    return true;
 }
@@ -103,11 +91,12 @@ function plugin_servicios_uninstall() {
 				   "glpi_plugin_servicios_criticidads",
 				   "glpi_plugin_servicios_ensnivels",
 				   "glpi_plugin_servicios_orientados"
-				   
 				   );
 
    foreach($tables as $table) {
-      $DB->query("DROP TABLE IF EXISTS `$table`;");
+      if ($DB->tableExists($table)) {
+         $DB->doQuery("DROP TABLE IF EXISTS `$table`");
+      }
    }
 
    //old versions
@@ -120,7 +109,9 @@ function plugin_servicios_uninstall() {
                    "glpi_plugin_servicios_profiles");
 
    foreach($tables as $table) {
-      $DB->query("DROP TABLE IF EXISTS `$table`;");
+      if ($DB->tableExists($table)) {
+         $DB->doQuery("DROP TABLE IF EXISTS `$table`");
+      }
    }
 
    $tables_glpi = array("glpi_displaypreferences",
@@ -130,9 +121,13 @@ function plugin_servicios_uninstall() {
                         "glpi_notepads");
 
    foreach($tables_glpi as $table_glpi) {
-      $DB->query("DELETE
-                  FROM `$table_glpi`
-                  WHERE `itemtype` = 'PluginServiciosServicio'");
+      // Use deleteOrDie() to delete rows matching criteria for GLPI 11 compatibility
+      // Check if table exists before attempting deletion
+      if ($DB->tableExists($table_glpi)) {
+         $DB->deleteOrDie($table_glpi, [
+            'itemtype' => 'PluginServiciosServicio'
+         ]);
+      }
    }
 
    if (class_exists('PluginDatainjectionModel')) {
@@ -218,28 +213,28 @@ function plugin_servicios_getAddSearchOptions($itemtype) {
    if (in_array($itemtype, PluginServiciosServicio::getTypes(true))) {
       
       if (Session::haveRight("plugin_servicios", READ)) {
-         $sopt[1310]['table']          = 'glpi_plugin_servicios_servicios';
-         $sopt[1310]['field']          = 'name';
-         $sopt[1310]['name']           = PluginServiciosServicio::getTypeName(2)." - ".
+         $sopt[1100]['table']          = 'glpi_plugin_servicios_servicios';
+         $sopt[1100]['field']          = 'name';
+         $sopt[1100]['name']           = PluginServiciosServicio::getTypeName(2)." - ".
                                          __('Name');
-         $sopt[1310]['forcegroupby']   = true;
-         $sopt[1310]['datatype']       = 'itemlink';
-         $sopt[1310]['massiveaction']  = false;
-         $sopt[1310]['itemlink_type']  = 'PluginServiciosServicio';
-         $sopt[1310]['joinparams']     = array('beforejoin'
+         $sopt[1100]['forcegroupby']   = true;
+         $sopt[1100]['datatype']       = 'itemlink';
+         $sopt[1100]['massiveaction']  = false;
+         $sopt[1100]['itemlink_type']  = 'PluginServiciosServicio';
+         $sopt[1100]['joinparams']     = array('beforejoin'
                                                    => array('table'      => 'glpi_plugin_servicios_servicios_items',
                                                             'joinparams' => array('jointype' => 'itemtype_item')));
                                                             
-         $sopt[1311]['table']          = 'glpi_plugin_servicios_serviciotypes';
-         $sopt[1311]['field']          = 'name';
-         $sopt[1311]['name']           = PluginServiciosServicio::getTypeName(2)." - ".
+         $sopt[1101]['table']          = 'glpi_plugin_servicios_serviciotypes';
+         $sopt[1101]['field']          = 'name';
+         $sopt[1101]['name']           = PluginServiciosServicio::getTypeName(2)." - ".
                                          PluginServiciosServicioType::getTypeName(1);
-         $sopt[1311]['forcegroupby']   = true;
-         $sopt[1311]['datatype']       = 'dropdown';
-         $sopt[1311]['massiveaction']  = false;
-         $sopt[1311]['joinparams']     = array('beforejoin' => array(
+         $sopt[1101]['forcegroupby']   = true;
+         $sopt[1101]['datatype']       = 'dropdown';
+         $sopt[1101]['massiveaction']  = false;
+         $sopt[1101]['joinparams']     = array('beforejoin' => array(
                                                       array('table'      => 'glpi_plugin_servicios_servicios',
-                                                            'joinparams' => $sopt[1310]['joinparams'])));
+                                                            'joinparams' => $sopt[1100]['joinparams'])));
       }
    }
 
@@ -257,18 +252,21 @@ function plugin_servicios_giveItem($type, $ID, $data, $num) {
    switch ($table.'.'.$field) {
       //display associated items with servicios
       case "glpi_plugin_servicios_servicios_items.items_id" :
-         $query_device     = "SELECT DISTINCT `itemtype`
-                              FROM `glpi_plugin_servicios_servicios_items`
-                              WHERE `plugin_servicios_servicios_id` = '".$data['id']."'
-                              ORDER BY `itemtype`";
-         $result_device    = $DB->query($query_device);
-         $number_device    = $DB->numrows($result_device);
-         $out              = '';
-         $servicios  = $data['id'];
+         $criteria = [
+            'SELECT' => ['itemtype'],
+            'DISTINCT' => true,
+            'FROM' => 'glpi_plugin_servicios_servicios_items',
+            'WHERE' => ['plugin_servicios_servicios_id' => $data['id']],
+            'ORDER' => 'itemtype'
+         ];
+         $result_device = $DB->request($criteria);
+         $number_device = count($result_device);
+         $out = '';
+         $servicios = $data['id'];
          if ($number_device > 0) {
-            for ($i=0 ; $i < $number_device ; $i++) {
-               $column   = "name";
-               $itemtype = $DB->result($result_device, $i, "itemtype");
+            foreach ($result_device as $device_row) {
+               $column = "name";
+               $itemtype = $device_row["itemtype"];
                if (!class_exists($itemtype)) {
                   continue;
                }
@@ -277,53 +275,74 @@ function plugin_servicios_giveItem($type, $ID, $data, $num) {
                   $table_item = getTableForItemType($itemtype);
 
                   if ($itemtype != 'Entity') {
-                     $query = "SELECT `".$table_item."`.*,
-                                      `glpi_plugin_servicios_servicios_items`.`id` AS table_items_id,
-                                      `glpi_entities`.`id` AS entity
-                               FROM `glpi_plugin_servicios_servicios_items`,
-                                    `".$table_item."`
-                               LEFT JOIN `glpi_entities`
-                                 ON (`glpi_entities`.`id` = `".$table_item."`.`entities_id`)
-                               WHERE `".$table_item."`.`id` = `glpi_plugin_servicios_servicios_items`.`items_id`
-                                     AND `glpi_plugin_servicios_servicios_items`.`itemtype` = '$itemtype'
-                                     AND `glpi_plugin_servicios_servicios_items`.`plugin_servicios_servicios_id` = '".$servicios."' "
-                                   . getEntitiesRestrictRequest(" AND ", $table_item, '', '',
-                                                                $item->maybeRecursive());
-
+                     $criteria = [
+                        'SELECT' => [$table_item.'.*', new QueryExpression('`glpi_plugin_servicios_servicios_items`.`id` AS table_items_id'), new QueryExpression('`glpi_entities`.`id` AS entity')],
+                        'FROM' => 'glpi_plugin_servicios_servicios_items',
+                        'INNER JOIN' => [
+                           $table_item => [
+                              'ON' => [
+                                 'glpi_plugin_servicios_servicios_items' => 'items_id',
+                                 $table_item => 'id'
+                              ]
+                           ]
+                        ],
+                        'LEFT JOIN' => [
+                           'glpi_entities' => [
+                              'ON' => [
+                                 'glpi_entities' => 'id',
+                                 $table_item => 'entities_id'
+                              ]
+                           ]
+                        ],
+                        'WHERE' => [
+                           'glpi_plugin_servicios_servicios_items.itemtype' => $itemtype,
+                           'glpi_plugin_servicios_servicios_items.plugin_servicios_servicios_id' => $servicios
+                        ],
+                        'ORDER' => ['glpi_entities.completename', $table_item.'.`'.$column.'`']
+                     ];
                      if ($item->maybeTemplate()) {
-                        $query .= " AND ".$table_item.".is_template = '0'";
+                        $criteria['WHERE'][$table_item.'.is_template'] = 0;
                      }
-                     $query .= " ORDER BY `glpi_entities`.`completename`,
-                                          `".$table_item."`.`$column` ";
+                     $result_linked = $DB->request($criteria);
 
                   } else {
-                     $query = "SELECT `".$table_item."`.*,
-                                      `glpi_plugin_servicios_servicios_items`.`id` AS table_items_id,
-                                      `glpi_entities`.`id` AS entity
-                               FROM `glpi_plugin_servicios_servicios_items`, `".$table_item."`
-                               WHERE `".$table_item."`.`id` = `glpi_plugin_servicios_servicios_items`.`items_id`
-                                     AND `glpi_plugin_servicios_servicios_items`.`itemtype` = '$itemtype'
-                                     AND `glpi_plugin_servicios_servicios_items`.`plugin_servicios_servicios_id` = '".$servicios."' "
-                                   . getEntitiesRestrictRequest(" AND ", $table_item, '', '',
-                                                                $item->maybeRecursive());
-
+                     $criteria = [
+                        'SELECT' => [$table_item.'.*', new QueryExpression('`glpi_plugin_servicios_servicios_items`.`id` AS table_items_id'), new QueryExpression('`glpi_entities`.`id` AS entity')],
+                        'FROM' => 'glpi_plugin_servicios_servicios_items',
+                        'INNER JOIN' => [
+                           $table_item => [
+                              'ON' => [
+                                 'glpi_plugin_servicios_servicios_items' => 'items_id',
+                                 $table_item => 'id'
+                              ]
+                           ]
+                        ],
+                        'LEFT JOIN' => [
+                           'glpi_entities' => [
+                              'ON' => [
+                                 'glpi_entities' => 'id',
+                                 $table_item => 'entities_id'
+                              ]
+                           ]
+                        ],
+                        'WHERE' => [
+                           'glpi_plugin_servicios_servicios_items.itemtype' => $itemtype,
+                           'glpi_plugin_servicios_servicios_items.plugin_servicios_servicios_id' => $servicios
+                        ],
+                        'ORDER' => ['glpi_entities.completename', $table_item.'.`'.$column.'`']
+                     ];
                      if ($item->maybeTemplate()) {
-                        $query .= " AND ".$table_item.".is_template = '0'";
+                        $criteria['WHERE'][$table_item.'.is_template'] = 0;
                      }
-                     $query .= " ORDER BY `glpi_entities`.`completename`,
-                                          `".$table_item."`.`$column` ";
+                     $result_linked = $DB->request($criteria);
                   }
                
-                  if ($result_linked=$DB->query($query)) {
-                     if ($DB->numrows($result_linked)) {
-                        $item = new $itemtype();
-                        while ($datal=$DB->fetchAssoc($result_linked)) {
-                           if ($item->getFromDB($datal['id'])) {
-                              $out .= $item->getTypeName()." - ".$item->getLink()."<br>";
-                           }
+                  if ($result_linked && count($result_linked) > 0) {
+                     $item = new $itemtype();
+                     foreach ($result_linked as $datal) {
+                        if ($item->getFromDB($datal['id'])) {
+                           $out .= $item->getTypeName()." - ".$item->getLink()."<br>";
                         }
-                     } else {
-                        $out .= ' ';
                      }
                   } else {
                      $out .= ' ';

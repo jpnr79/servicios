@@ -265,13 +265,33 @@ $criteria = [
       }
       
       //Migration old rights in new ones
-      foreach ($DB->request("SELECT `id` FROM `glpi_profiles`") as $prof) {
+      foreach ($DB->request('glpi_profiles') as $prof) {
          self::migrateOneProfile($prof['id']);
       }
-      foreach ($DB->request("SELECT *
-                           FROM `glpi_profilerights` 
-                           WHERE `profiles_id`='".$_SESSION['glpiactiveprofile']['id']."' 
-                              AND `name` LIKE '%plugin_servicios%'") as $prof) {
+
+      // If the active profile has no servicios rights set, grant full rights to admins
+      // so the menu shows the add button without manual profile tweaks.
+      if (Session::haveRight('config', UPDATE)) {
+         $activeProfileId = $_SESSION['glpiactiveprofile']['id'];
+         $current = ProfileRight::getProfileRights($activeProfileId, array('plugin_servicios'));
+         if (isset($current['plugin_servicios']) && $current['plugin_servicios'] == 0) {
+            $full = READ | UPDATE | CREATE | DELETE | PURGE;
+            $pr = new ProfileRight();
+            $pr->updateByCriteria(
+               array('profiles_id' => $activeProfileId, 'name' => 'plugin_servicios'),
+               array('rights' => $full)
+            );
+            $_SESSION['glpiactiveprofile']['plugin_servicios'] = $full;
+         }
+      }
+
+      foreach ($DB->request([
+         'FROM' => 'glpi_profilerights',
+         'WHERE' => [
+            'profiles_id' => $_SESSION['glpiactiveprofile']['id'],
+            'name' => ['LIKE', '%plugin_servicios%']
+         ]
+      ]) as $prof) {
          $_SESSION['glpiactiveprofile'][$prof['name']] = $prof['rights']; 
       }
    }

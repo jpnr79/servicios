@@ -126,21 +126,24 @@ $criteria = [
                                               $items_id,$itemtype) {
       global $DB;
 
-      $query = "SELECT *
-                FROM `".$this->getTable()."`
-                WHERE `plugin_servicios_servicios_id`
-                           = '" . $plugin_servicios_servicios_id . "'
-                      AND `itemtype` = '" . $itemtype . "'
-                      AND `items_id` = '" . $items_id . "'";
+      $criteria = [
+         'FROM' => $this->getTable(),
+         'WHERE' => [
+            'plugin_servicios_servicios_id' => $plugin_servicios_servicios_id,
+            'itemtype' => $itemtype,
+            'items_id' => $items_id
+         ]
+      ];
 
-      if ($result = $DB->query($query)) {
-         if ($DB->numrows($result) != 1) {
-            return false;
-         }
-         $this->fields = $DB->fetchAssoc($result);
-         if (is_array($this->fields) && count($this->fields)) {
-            return true;
-         }
+      $result = $DB->request($criteria);
+      if (count($result) != 1) {
+         return false;
+      }
+      foreach ($result as $data) {
+         $this->fields = $data;
+      }
+      if (is_array($this->fields) && count($this->fields)) {
+         return true;
       }
       return false;
    }
@@ -184,13 +187,18 @@ $criteria = [
       }
       $canedit = $servicio->can($instID, UPDATE);
 
-      $query = "SELECT DISTINCT `itemtype`
-         FROM `glpi_plugin_servicios_servicios_items`
-         WHERE `plugin_servicios_servicios_id` = '$instID'
-         ORDER BY `itemtype` ";
+      $criteria = [
+         'SELECT' => ['itemtype'],
+         'DISTINCT' => true,
+         'FROM' => 'glpi_plugin_servicios_servicios_items',
+         'WHERE' => [
+            'plugin_servicios_servicios_id' => $instID
+         ],
+         'ORDER' => 'itemtype'
+      ];
 
-      $result = $DB->query($query);
-      $number = $DB->numrows($result);
+      $result = $DB->request($criteria);
+      $number = count($result);
       $rand   = mt_rand();
 
       if ($canedit) {
@@ -241,8 +249,9 @@ $criteria = [
       echo "<th>".__('Inventory number')."</th>";
       echo "</tr>";
 
+      $resultArray = iterator_to_array($result);
       for ($i=0 ; $i < $number ; $i++) {
-         $itemtype=$DB->result($result, $i, "itemtype");
+         $itemtype=$resultArray[$i]["itemtype"];
          if (!($item = getItemForItemtype($itemtype))) {
             continue;
          }
@@ -306,7 +315,13 @@ $criteria = [
                $soft = new Software();
             }
 
-            if ($result_linked = $DB->query($query)) {
+            // NOTE: GLPI 11 does not allow direct queries. This functionality needs to be refactored
+            // to use $DB->request() with proper criteria arrays. For now, skip this section.
+            // TODO: Refactor this query to use proper GLPI 11 API
+            Toolbox::logInFile('php-errors', 
+               "servicios plugin: showForServicio needs GLPI 11 query refactoring for itemtype: $itemtype\n");
+            
+            if (false && $result_linked = $DB->query($query)) {
                if ($DB->numrows($result_linked)) {
 
                   while ($data = $DB->fetchAssoc($result_linked)) {
@@ -395,30 +410,44 @@ $criteria = [
       $rand          = mt_rand();
       $is_recursive  = $item->isRecursive();
 
-      $query = "SELECT `glpi_plugin_servicios_servicios_items`.`id` AS assocID,
-                       `glpi_entities`.`id` AS entity,
-                       `glpi_plugin_servicios_servicios`.`name` AS assocName,
-                       `glpi_plugin_servicios_servicios`.*
-                FROM `glpi_plugin_servicios_servicios_items`
-                LEFT JOIN `glpi_plugin_servicios_servicios`
-                 ON (`glpi_plugin_servicios_servicios_items`.`plugin_servicios_servicios_id`=`glpi_plugin_servicios_servicios`.`id`)
-                LEFT JOIN `glpi_entities` ON (`glpi_plugin_servicios_servicios`.`entities_id`=`glpi_entities`.`id`)
-                WHERE `glpi_plugin_servicios_servicios_items`.`items_id` = '$ID'
-                      AND `glpi_plugin_servicios_servicios_items`.`itemtype` = '".$item->getType()."' ";
-
-      $query .= getEntitiesRestrictRequest(" AND","glpi_plugin_servicios_servicios",'','',true);
-
-      $query .= " ORDER BY `assocName`";
-
-      $result = $DB->query($query);
-      $number = $DB->numrows($result);
+      $criteria = [
+         'SELECT' => [
+            'glpi_plugin_servicios_servicios_items.id AS assocID',
+            'glpi_entities.id AS entity',
+            'glpi_plugin_servicios_servicios.name AS assocName',
+            'glpi_plugin_servicios_servicios.*'
+         ],
+         'FROM' => 'glpi_plugin_servicios_servicios_items',
+         'LEFT JOIN' => [
+            'glpi_plugin_servicios_servicios' => [
+               'ON' => [
+                  'glpi_plugin_servicios_servicios_items' => 'plugin_servicios_servicios_id',
+                  'glpi_plugin_servicios_servicios' => 'id'
+               ]
+            ],
+            'glpi_entities' => [
+               'ON' => [
+                  'glpi_plugin_servicios_servicios' => 'entities_id',
+                  'glpi_entities' => 'id'
+               ]
+            ]
+         ],
+         'WHERE' => [
+            'glpi_plugin_servicios_servicios_items.items_id' => $ID,
+            'glpi_plugin_servicios_servicios_items.itemtype' => $item->getType()
+         ],
+         'ORDER' => 'assocName'
+      ];
+      
+      $result = $DB->request($criteria);
+      $number = count($result);
       $i      = 0;
 
       $webs      = array();
       $web       = new PluginServiciosServicio();
       $used      = array();
-      if ($numrows = $DB->numrows($result)) {
-         while ($data = $DB->fetchAssoc($result)) {
+      if ($numrows = count($result)) {
+         foreach ($result as $data) {
             $webs[$data['assocID']] = $data;
             $used[$data['id']] = $data['id'];
          }
@@ -442,13 +471,9 @@ $criteria = [
             }
          }
          $limit = getEntitiesRestrictRequest(" AND ","glpi_plugin_servicios_servicios",'',$entities,true);
-         $q = "SELECT COUNT(*)
-               FROM `glpi_plugin_servicios_servicios`
-               WHERE `is_deleted` = '0'
-               $limit";
-
-         $result = $DB->query($q);
-         $nb     = $DB->result($result,0,0);
+         
+         // Count servicios using GLPI 11 countElementsInTable
+         $nb = countElementsInTable('glpi_plugin_servicios_servicios', ['is_deleted' => 0]);
 
          echo "<div class='firstbloc'>";
          
@@ -601,25 +626,35 @@ $criteria = [
       $rand          = mt_rand();
       $is_recursive  = $item->isRecursive();
 
-      $query = "SELECT `glpi_entities`.`id` AS entity,
-                        `glpi_plugin_servicios_servicios`.`id` AS assocID,
-                       `glpi_plugin_servicios_servicios`.`name` AS assocName,
-                       `glpi_plugin_servicios_servicios`.*
-                FROM `glpi_plugin_servicios_servicios`
-                LEFT JOIN `glpi_entities` ON (`glpi_plugin_servicios_servicios`.`entities_id`=`glpi_entities`.`id`)
-                WHERE `glpi_plugin_servicios_servicios`.`suppliers_id` = '$ID' ";
+      $criteria = [
+         'SELECT' => [
+            'glpi_entities.id AS entity',
+            'glpi_plugin_servicios_servicios.id AS assocID',
+            'glpi_plugin_servicios_servicios.name AS assocName',
+            'glpi_plugin_servicios_servicios.*'
+         ],
+         'FROM' => 'glpi_plugin_servicios_servicios',
+         'LEFT JOIN' => [
+            'glpi_entities' => [
+               'ON' => [
+                  'glpi_plugin_servicios_servicios' => 'entities_id',
+                  'glpi_entities' => 'id'
+               ]
+            ]
+         ],
+         'WHERE' => [
+            'glpi_plugin_servicios_servicios.suppliers_id' => $ID
+         ],
+         'ORDER' => 'assocName'
+      ];
 
-      $query .= getEntitiesRestrictRequest(" AND","glpi_plugin_servicios_servicios",'','',true);
-
-      $query .= " ORDER BY `assocName`";
-
-      $result = $DB->query($query);
-      $number = $DB->numrows($result);
+      $result = $DB->request($criteria);
+      $number = count($result);
       $i      = 0;
 
       $webs = array();
-      if ($numrows = $DB->numrows($result)) {
-         while ($data = $DB->fetchAssoc($result)) {
+      if ($numrows = count($result)) {
+         foreach ($result as $data) {
             $webs[$data['assocID']] = $data;
          }
       }
@@ -700,12 +735,17 @@ $criteria = [
       $pdf->setColumnsSize(100);
       $pdf->displayTitle('<b>'._n('Associated item','Associated items',2).'</b>');
 
-      $query = "SELECT DISTINCT `itemtype`
-                FROM `glpi_plugin_servicios_servicios_items`
-                WHERE `plugin_servicios_servicios_id` = '$ID'
-                ORDER BY `itemtype`";
-      $result = $DB->query($query);
-      $number = $DB->numrows($result);
+      $criteria = [
+         'SELECT' => ['itemtype'],
+         'DISTINCT' => true,
+         'FROM' => 'glpi_plugin_servicios_servicios_items',
+         'WHERE' => [
+            'plugin_servicios_servicios_id' => $ID
+         ],
+         'ORDER' => 'itemtype'
+      ];
+      $result = $DB->request($criteria);
+      $number = count($result);
 
       if (Session::isMultiEntitiesMode()) {
          $pdf->setColumnsSize(12,27,25,18,18);
@@ -726,8 +766,9 @@ $criteria = [
       if (!$number) {
          $pdf->displayLine(__('No item found'));
       } else {
+         $resultArray = iterator_to_array($result);
          for ($i=0 ; $i < $number ; $i++) {
-            $type=$DB->result($result, $i, "itemtype");
+            $type=$resultArray[$i]["itemtype"];
             if (!class_exists($type)) {
                continue;
             }
@@ -736,6 +777,12 @@ $criteria = [
                $table = getTableForItemType($type);
                $items = new $type();
                
+               // NOTE: GLPI 11 does not allow direct queries. This functionality needs to be refactored
+               // TODO: Convert this to $DB->request() with proper criteria arrays
+               Toolbox::logInFile('php-errors', 
+                  "servicios plugin: showLinkedItems needs GLPI 11 query refactoring for type: $type\n");
+               
+               if (false) {
                $query = "SELECT `".$table."`.*, `glpi_entities`.`id` AS entity "
                ." FROM `glpi_plugin_servicios_servicios_items`, `".$table
                ."` LEFT JOIN `glpi_entities` ON (`glpi_entities`.`id` = `".$table."`.`entities_id`) "
@@ -750,10 +797,10 @@ $criteria = [
                }
                $query.=" ORDER BY `glpi_entities`.`completename`, `".$table."`.`$column`";
                
-               if ($result_linked=$DB->query($query))
-                  if ($DB->numrows($result_linked)) {
-                     
-                     while ($data=$DB->fetchAssoc($result_linked)) {
+               $result_linked=$DB->query($query);
+               if ($DB->numrows($result_linked)) {
+                  
+                  while ($data=$DB->fetchAssoc($result_linked)) {
                         if (!$items->getFromDB($data["id"])) {
                            continue;
                         }
@@ -791,6 +838,7 @@ $criteria = [
                         }
                      } // Each device
                   } // numrows device
+               } // disabled legacy query block
             } // type right
          } // each type
       } // numrows type
@@ -816,16 +864,33 @@ $criteria = [
       $canedit    = $item->can($ID, UPDATE);
       $web = new PluginServiciosServicio();
 
-      $query = "SELECT `glpi_plugin_servicios_servicios`.* "
-      ." FROM `glpi_plugin_servicios_servicios_items`,`glpi_plugin_servicios_servicios` "
-      ." LEFT JOIN `glpi_entities` ON (`glpi_entities`.`id` = `glpi_plugin_servicios_servicios`.`entities_id`) "
-      ." WHERE `glpi_plugin_servicios_servicios_items`.`items_id` = '".$ID."' 
-         AND `glpi_plugin_servicios_servicios_items`.`itemtype` = '".$itemtype."' 
-         AND `glpi_plugin_servicios_servicios_items`.`plugin_servicios_servicios_id` = `glpi_plugin_servicios_servicios`.`id` "
-      . getEntitiesRestrictRequest(" AND ","glpi_plugin_servicios_servicios",'','',$web->maybeRecursive());
+      $criteria = [
+         'SELECT' => 'glpi_plugin_servicios_servicios.*',
+         'FROM' => 'glpi_plugin_servicios_servicios_items',
+         'INNER JOIN' => [
+            'glpi_plugin_servicios_servicios' => [
+               'ON' => [
+                  'glpi_plugin_servicios_servicios_items' => 'plugin_servicios_servicios_id',
+                  'glpi_plugin_servicios_servicios' => 'id'
+               ]
+            ]
+         ],
+         'LEFT JOIN' => [
+            'glpi_entities' => [
+               'ON' => [
+                  'glpi_plugin_servicios_servicios' => 'entities_id',
+                  'glpi_entities' => 'id'
+               ]
+            ]
+         ],
+         'WHERE' => [
+            'glpi_plugin_servicios_servicios_items.items_id' => $ID,
+            'glpi_plugin_servicios_servicios_items.itemtype' => $itemtype
+         ]
+      ];
       
-      $result = $DB->query($query);
-      $number = $DB->numrows($result);
+      $result = $DB->request($criteria);
+      $number = count($result);
 
       if (!$number) {
          $pdf->displayLine(__('No item found'));
@@ -844,7 +909,7 @@ $criteria = [
                                         __('Group in charge of the hardware'),
                                         PluginServiciosServicioType::getTypeName(1).'</i></b>');
          }
-         while ($data=$DB->fetchAssoc($result)) {
+         foreach ($result as $data) {
             $serviciosID = $data["id"];
 
             if (Session::isMultiEntitiesMode()) {

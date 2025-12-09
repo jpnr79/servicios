@@ -67,6 +67,33 @@ function plugin_init_servicios() {
    //if glpi is loaded
    if (Session::getLoginUserID()) {
 
+      // Ensure super-admin profiles see the Servicios menu/add button even if rights were not initialized
+      if (Session::haveRight('config', UPDATE)) {
+         $activeProfileId = $_SESSION['glpiactiveprofile']['id'];
+         $current = ProfileRight::getProfileRights($activeProfileId, array('plugin_servicios'));
+         $full = READ | UPDATE | CREATE | DELETE | PURGE;
+         if (!isset($current['plugin_servicios']) || $current['plugin_servicios'] == 0) {
+            $pr = new ProfileRight();
+            $exists = countElementsInTable('glpi_profilerights', [
+               'profiles_id' => $activeProfileId,
+               'name' => 'plugin_servicios'
+            ]);
+            if ($exists) {
+               $pr->updateByCriteria([
+                  'profiles_id' => $activeProfileId,
+                  'name' => 'plugin_servicios'
+               ], ['rights' => $full]);
+            } else {
+               $pr->add([
+                  'profiles_id' => $activeProfileId,
+                  'name' => 'plugin_servicios',
+                  'rights' => $full
+               ]);
+            }
+            $_SESSION['glpiactiveprofile']['plugin_servicios'] = $full;
+         }
+      }
+
       //if environment plugin is installed
       $plugin = new Plugin();
       if (!$plugin->isActivated('environment') 
