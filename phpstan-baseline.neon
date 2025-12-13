@@ -1,0 +1,139 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined static method Session\:\:checkCentralAccess\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: ajax/dropdownTypeServicios.php
+
+		-
+			message: '#^Call to an undefined static method CommonGLPI\:\:registerStandardTab\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: hook.php
+
+		-
+			message: '#^Call to an undefined static method Search\:\:getOptions\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: hook.php
+
+		-
+			message: '#^Method PluginServiciosProfile\:\:showForm\(\) should return nothing but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: inc/profile.class.php
+
+		-
+			message: '#^Call to an undefined static method Dropdown\:\:showAllItems\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: inc/servicio.class.php
+
+		-
+			message: '#^Call to an undefined static method Dropdown\:\:showNumber\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: inc/servicio.class.php
+
+		-
+			message: '#^Call to an undefined static method Html\:\:textarea\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: inc/servicio.class.php
+
+		-
+			message: '#^Call to an undefined static method Session\:\:isMultiEntitiesMode\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: inc/servicio.class.php
+
+		-
+			message: '#^Static call to instance method CommonDBTM\:\:showMassiveActionsSubForm\(\)\.$#'
+			identifier: method.staticCall
+			count: 1
+			path: inc/servicio.class.php
+
+		-
+			message: '#^Call to an undefined static method Session\:\:isMultiEntitiesMode\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 9
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Call to an undefined static method Toolbox\:\:logInFile\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Function getEntitiesRestrictRequest not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Method PluginServiciosServicio_Item\:\:showForServicio\(\) should return nothing but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Parameter \$pdf of method PluginServiciosServicio_Item\:\:ItemsPdf\(\) has invalid type PluginPdfSimplePDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Parameter \$pdf of method PluginServiciosServicio_Item\:\:PdfFromItems\(\) has invalid type PluginPdfSimplePDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Parameter \$pdf of method PluginServiciosServicio_Item\:\:displayTabContentForPDF\(\) has invalid type PluginPdfSimplePDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: inc/servicio_item.class.php
+
+		-
+			message: '#^Call to an undefined static method Search\:\:getOptions\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: inc/servicioinjection.class.php
+
+		-
+			message: '#^Call to static method addToSearchOptions\(\) on an unknown class PluginDatainjectionCommonInjectionLib\.$#'
+			identifier: class.notFound
+			count: 1
+			path: inc/servicioinjection.class.php
+
+		-
+			message: '#^Instantiated class PluginDatainjectionCommonInjectionLib not found\.$#'
+			identifier: class.notFound
+			count: 2
+			path: inc/servicioinjection.class.php
+
+		-
+			message: '#^Access to an undefined property PluginServiciosServicioPDF\:\:\$obj\.$#'
+			identifier: property.notFound
+			count: 1
+			path: inc/serviciopdf.class.php
+
+		-
+			message: '#^Deprecated in PHP 8\.4\: Parameter \#1 \$obj \(CommonGLPI\) is implicitly nullable via default value null\.$#'
+			identifier: parameter.implicitlyNullable
+			count: 1
+			path: inc/serviciopdf.class.php
+
+		-
+			message: '#^Parameter \$pdf of method PluginServiciosServicioPDF\:\:displayTabContentForPDF\(\) has invalid type PluginPdfSimplePDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: inc/serviciopdf.class.php
+
+		-
+			message: '#^Call to an undefined static method Toolbox\:\:addslashes_deep\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: inc/serviciotype.class.php
