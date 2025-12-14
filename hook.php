@@ -121,10 +121,10 @@ function plugin_servicios_uninstall() {
                         "glpi_notepads");
 
    foreach($tables_glpi as $table_glpi) {
-      // Use deleteOrDie() to delete rows matching criteria for GLPI 11 compatibility
+      // Use delete() to delete rows matching criteria for GLPI 11 compatibility
       // Check if table exists before attempting deletion
       if ($DB->tableExists($table_glpi)) {
-         $DB->deleteOrDie($table_glpi, [
+         $DB->delete($table_glpi, [
             'itemtype' => 'PluginServiciosServicio'
          ]);
       }
@@ -245,7 +245,7 @@ function plugin_servicios_getAddSearchOptions($itemtype) {
 function plugin_servicios_giveItem($type, $ID, $data, $num) {
    global $CFG_GLPI, $DB;
 
-   $searchopt  = &Search::getOptions($type);
+   $searchopt  = Search::getOptions($type);
    $table      = $searchopt[$ID]["table"];
    $field      = $searchopt[$ID]["field"];
 
