@@ -44,8 +44,7 @@ function plugin_init_servicios() {
 
    // Params : plugin name - string type - number - class - table - form page
    Plugin::registerClass('PluginServiciosServicio',
-                         array('linkgroup_tech_types'         => true,
-                               'linkuser_tech_types'          => true,
+                         array('assignable_types'             => true,
                                'document_types'          => true,
                                'contract_types'          => true,
                                'ticket_types'            => true,
